@@ -1,0 +1,11 @@
+0.  an artificial long word said to mean a lung disease caused by inhaling very	    fine ash and sand dust."
+1.  an artificial long word that is said to mean a lung disease caused by inhaling very fine ash and sand dust.
+2.  16.
+3.  Because by having pass by referance you aren't copying anything inside the function,thus saving space.
+4.  The for loop through its iteration by taking each character, checks for alphabets and ' characters.It leaves out alphabet sets that are beyond LENGTH and starts reading from the next word.If we find a number as a character, we leave that word. 
+5.  The program does removes words that are beyond the LENGTH.So if fscanf is used, we will have to count the total letters again.Taking each character at a time, meant that number if inside a word then that word too can be omitted.  
+6.  The parameters word and dictionary, passed can't be changed inside the function.
+7.  Data structure used is hashtable.Each element in the hash table consists of a a word and a next pointer to same structure.We compare our given word to hastable's each node's word obtained by a hash function.
+8.  0.09
+9.  Searched for a good hash function. DJB2 hash function is good for strings,it has a good balance of being extremely fast, while providing a reasonable distribution of hash values. But there are other hash functions which claim to have more better output characteristics, but involves many more lines of code.
+10. Bottleneck has to be the fact that this program will take a lot of space.

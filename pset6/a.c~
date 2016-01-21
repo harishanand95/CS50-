@@ -1,0 +1,205 @@
+/****************************************************************************
+This program implements the loading and unloading of a dictionary file, 
+as well as checking whether a given word is in the dictionary file.
+****************************************************************************/
+
+#include <stdbool.h>
+#include <strings.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <cs50.h>
+#include <ctype.h>
+#include "dictionary.h"
+
+unsigned int word_count = 0;
+node* head;
+node* hashtable[HASHTABLE_SIZE];
+
+/**
+ * Returns a hash value for string 's' to index into the hash table.
+ */
+unsigned int hash(const char* s) //found in Section 6.6 (Page 144) in "C Programming Language": http://www.amazon.com/dp/0131103628/
+{
+    unsigned int hashvalue;    
+    for (hashvalue = 0; *s != '\0'; s++)
+    {  
+        hashvalue = *s + 31 * hashvalue;
+    }
+    return hashvalue % HASHTABLE_SIZE;
+}
+
+/**
+ * Returns true if word is in dictionary else false.
+ */
+bool check(const char* word)
+{
+    char lower[strlen(word)+1];  
+    strcpy(lower,word);
+    
+    
+    for(int i = 0, n = strlen(word); i < n; i++) 
+    {
+        lower[i] = tolower(lower[i]);
+    }     
+    unsigned int hashval = hash(lower);
+    //there's no list there
+    if (hashtable[hashval] == NULL)
+    {
+        return false;
+    }
+    
+    //there's a list
+    node* head = hashtable[hashval];
+    node* cursor = head;
+    
+    //only 1 word in list
+    if (cursor->next == NULL)
+    {
+       if (strcmp(lower, cursor->word) == 0)
+        {
+            return true;
+        } 
+        return false;
+    }
+    
+    //more than 1 word in list
+    while (cursor->next != NULL)
+    {
+        if (strcmp(lower, cursor->word) == 0)
+        {
+            return true;
+        }
+        else 
+        {
+            cursor = cursor->next;
+            //for last node in list
+            if (cursor->next == NULL)
+            {       
+                if (strcmp(lower, cursor->word) == 0)
+                {
+                    return true;
+                } 
+            }
+        }
+    }            
+    return false;
+}
+
+/**
+ * Loads dictionary into memory.  Returns true if successful else false.
+ */
+bool load(const char* dictionary)
+{
+    const char* infile = dictionary;    
+    FILE* fp = fopen(infile, "r");
+       
+    if (fp == NULL)
+    {
+        printf("Could not open %s.\n", infile);
+        return 2;
+    }
+    
+    else
+    {
+        //iterate over each word in dictionary
+        for (int c = 0; feof(fp) == 0; c++)
+        {    
+            node* new_node = (node*)malloc(sizeof(node));
+            if (new_node == NULL)
+            {
+                return 1;
+            }                    
+ 
+            fgets(new_node->word, LENGTH + 2, fp);
+            new_node->word[strlen(new_node->word) - 1] = '\0';            
+            unsigned int hashval = hash(new_node->word);
+            
+            //first node in linked list            
+            if (hashtable[hashval] == NULL)
+            {
+                new_node->next = NULL;
+                hashtable[hashval] = new_node;                                 
+            }
+            
+            //list already filled 
+            else if (hashtable[hashval] != NULL)
+                {
+                node* cursor = hashtable[hashval];
+                //finds last node, points it to new_node, and points new_node to null 
+                while(cursor->next != NULL)
+                {
+                    cursor = cursor->next;    
+                } 
+                    cursor->next = new_node;
+                    new_node->next = NULL;                                     
+                }                
+            word_count++;    
+        }    
+        word_count--;
+        fclose(fp);
+        return true;
+    }     
+    return false;
+}
+
+/**
+ * Returns number of words in dictionary if loaded else 0 if not yet loaded.
+ */
+unsigned int size(void)
+{
+    if (load)
+        return word_count;
+    else return 0;
+}
+
+/**
+ * Unloads dictionary from memory.  Returns true if successful else false.
+ */
+bool unload(void)
+{
+        if (load)
+        {            
+            //for each hashtable index/list
+            for (int i = 0; i < HASHTABLE_SIZE; i++)
+            {
+                node* temp;
+                node* cursor = hashtable[i];
+                //empty block in hashtable, increments index
+                while (hashtable[i] == NULL)
+                {
+                    i++;
+                }
+
+                //update cursor
+                cursor = hashtable[i];
+                
+                //if 1 only element in list
+                if (cursor->next == NULL)
+                {
+                    temp = cursor;
+                    free(temp);
+                }
+                
+                //if 2+ elements in list                                
+                else if (cursor->next != NULL)
+                {
+                    for(int j = 0; cursor->next != NULL; j++)
+                    {
+                        temp = cursor;
+                        cursor = cursor->next;
+                        free(temp);                                         
+                    }
+                    
+                    //frees last element of the list
+                    if (cursor->next == NULL)
+                    {
+                        temp = cursor;
+                        free(temp);
+                    } 
+                }
+            }            
+            return true;
+        }                           
+        return false;
+}
